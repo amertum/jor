@@ -44,8 +44,8 @@ public class RecorderTest {
     public void testRecordOnObject()
     {
         final List<String> myList = new ArrayList<String>();
-        final Recorder<List<String>> recorder = new Recorder(List.class);
-        final List<String> list = recorder.instance(myList);
+        final Recorder<List<String>> recorder = new Recorder(List.class, myList);
+        final List<String> list = recorder.instance();
 
         assertThat(isRecordable(list)).isTrue();
 
@@ -151,7 +151,7 @@ public class RecorderTest {
     public void testIsRecordable()
     {
         assertThat(isRecordable(new Recorder<List>(List.class).instance())).isTrue();
-        assertThat(isRecordable(new Recorder<List>(List.class).instance(new ArrayList<String>()))).isTrue();
+        assertThat(isRecordable(new Recorder<List>(List.class, new ArrayList<String>()).instance())).isTrue();
 
         assertThat(isRecordable(List.class)).isFalse();
         assertThat(isRecordable(new ArrayList<String>())).isFalse();

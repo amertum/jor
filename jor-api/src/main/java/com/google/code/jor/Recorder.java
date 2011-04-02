@@ -9,23 +9,22 @@ public class Recorder<Type> {
     Recorder(
             final Class<Type> classToRecord)
     {
+        this(classToRecord, null);
+    }
+
+
+    Recorder(
+            final Class<Type> classToRecord,
+            final Type forwardTo)
+    {
         this.classToRecord = classToRecord;
+        this.forwardTo = forwardTo;
     }
 
 
     public Type instance()
     {
-        this.recorder = new RecorderInvocationHandler();
-        final Type proxy = newProxyThreadLoader(this.recorder, this.classToRecord, Recordable.class);
-
-        return proxy;
-    }
-
-
-    public Type instance(
-            final Type forwardTo)
-    {
-        this.recorder = new RecorderInvocationHandler(new ForwardInvocationHandler<Type>(forwardTo));
+        this.recorder = makeRecorder(this.forwardTo);
         final Type proxy = newProxyThreadLoader(this.recorder, this.classToRecord, Recordable.class);
 
         return proxy;
@@ -53,7 +52,20 @@ public class Recorder<Type> {
         return (object instanceof Recordable);
     }
 
+
+    private static <Type> RecorderInvocationHandler makeRecorder(
+            final Type forwardTo)
+    {
+        final RecorderInvocationHandler rec = (forwardTo == null)
+                ? new RecorderInvocationHandler()
+                : new RecorderInvocationHandler(new ForwardInvocationHandler<Type>(forwardTo));
+
+        return rec;
+    }
+
     private final Class<Type> classToRecord;
+
+    private final Type forwardTo;
 
     private RecorderInvocationHandler recorder;
 
