@@ -24,9 +24,35 @@ public class Recorder<Type> {
 
     public Type instance()
     {
-        this.recorder = makeRecorder(this.forwardTo);
+        if (this.recorder == null) {
+            this.recorder = makeRecorder(this.forwardTo);
+        }
+
+        if (this.recorder.getNextInvocationReverser() != null) {
+            throw new IllegalStateException(
+                    "It appears that addReverse() had been called without invoking the method to reverse. ie : addReverse(someReverser).methodToReverse()");
+        }
+
         final Type proxy = newProxyThreadLoader(this.recorder, this.classToRecord, Recordable.class);
 
+        return proxy;
+    }
+
+
+    public Type addReverse(
+            final Reverser reverser)
+    {
+        if (this.recorder != null) {
+            throw new IllegalStateException("all addReverse() settings must be called before instance()");
+        }
+
+        final Reverser nonNullReverser = (reverser == null)
+                ? new NullReverser()
+                : reverser;
+        this.recorder = makeRecorder(this.forwardTo);
+        this.recorder.setNextInvocationReverser(nonNullReverser);
+
+        final Type proxy = newProxyThreadLoader(this.recorder, this.classToRecord, Recordable.class);
         return proxy;
     }
 
@@ -36,6 +62,15 @@ public class Recorder<Type> {
     {
         for (final Recording recording : this.getRecordings()) {
             recording.replayOn(objectToReplayOn);
+        }
+    }
+
+
+    public void reverseOn(
+            final Type objectToReplayOn)
+    {
+        for (final Recording recording : this.getRecordings()) {
+            recording.reverseOn(objectToReplayOn);
         }
     }
 

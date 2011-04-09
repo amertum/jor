@@ -1,6 +1,7 @@
 package com.google.code.jor;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -36,8 +37,15 @@ class RecorderInvocationHandler
         final List<Object> arguments = (args == null)
                 ? new ArrayList<Object>()
                 : Arrays.asList(args);
-        final Recording recording = new Recording(method, arguments);
-        this.recordings.add(recording);
+
+        if (this.nextInvocationReverser == null) {
+            final Recording recording = new Recording(method, arguments, this.reversers.get(method));
+            this.recordings.add(recording);
+        }
+        else {
+            this.reversers.put(method, this.nextInvocationReverser);
+            this.nextInvocationReverser = null;
+        }
 
         final Object result;
         if (this.delegate == null) {
@@ -56,14 +64,37 @@ class RecorderInvocationHandler
     }
 
 
+    public Reverser<Object> getNextInvocationReverser()
+    {
+        return this.nextInvocationReverser;
+    }
+
+
+    public void setNextInvocationReverser(
+            final Reverser<Object> reverser)
+    {
+        this.nextInvocationReverser = reverser;
+    }
+
+
     public List<Recording> getRecordings()
     {
         return unmodifiableList(this.recordings);
     }
 
+
+    public Map<Method, Reverser<Object>> getReversers()
+    {
+        return unmodifiableMap(this.reversers);
+    }
+
     private final InvocationHandler delegate;
 
     private final List<Recording> recordings = new ArrayList<Recording>();
+
+    private final Map<Method, Reverser<Object>> reversers = new HashMap<Method, Reverser<Object>>();
+
+    private Reverser<Object> nextInvocationReverser;
 
     private static final Map<Class<?>, Object> PRIMITIVE_VALUES = new HashMap<Class<?>, Object>();
 

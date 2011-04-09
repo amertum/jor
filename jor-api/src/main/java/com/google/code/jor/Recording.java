@@ -11,10 +11,20 @@ public class Recording {
 
     Recording(
             final Method method,
-            final List<? extends Object> arguments)
+            final List<? extends Object> arguments,
+            final Reverser<Object> reverser)
     {
         this.method = method;
         this.arguments = new ArrayList<Object>(arguments);
+        this.reverser = reverser;
+    }
+
+
+    Recording(
+            final Method method,
+            final List<? extends Object> arguments)
+    {
+        this(method, arguments, null);
     }
 
 
@@ -36,6 +46,17 @@ public class Recording {
     }
 
 
+    public void reverseOn(
+            final Object objectToReverseOn)
+    {
+        if (this.getReverser() == null) {
+            throw new UnsupportedOperationException("there is no reverser (null)");
+        }
+
+        this.getReverser().reverse(new Invocation<Object>(objectToReverseOn, this.getMethod(), this.getArguments()));
+    }
+
+
     public Method getMethod()
     {
         return this.method;
@@ -47,8 +68,16 @@ public class Recording {
         return unmodifiableList(this.arguments);
     }
 
+
+    public Reverser<Object> getReverser()
+    {
+        return this.reverser;
+    }
+
     private final Method method;
 
     private final List<Object> arguments;
+
+    private final Reverser<Object> reverser;
 
 }
