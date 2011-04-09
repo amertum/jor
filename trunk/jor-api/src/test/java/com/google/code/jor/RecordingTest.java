@@ -1,6 +1,9 @@
 package com.google.code.jor;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -26,6 +29,24 @@ public class RecordingTest {
         recording.replayOn(myList);
 
         assertThat(myList).containsExactly("one");
+    }
+
+
+    @Test
+    public final void testReverseOn()
+        throws Exception
+    {
+        final Reverser<Object> reverser = mock(Reverser.class);
+
+        final Method method = List.class.getMethod("add", Object.class);
+        final List<String> arguments = Arrays.asList("one");
+
+        final List<String> myList = new ArrayList<String>();
+        final Recording recording = new Recording(method, arguments, reverser);
+        recording.reverseOn(myList);
+
+        verify(reverser).reverse(any(Invocation.class));
+        assertThat(recording.getReverser()).isSameAs(reverser);
     }
 
 }
